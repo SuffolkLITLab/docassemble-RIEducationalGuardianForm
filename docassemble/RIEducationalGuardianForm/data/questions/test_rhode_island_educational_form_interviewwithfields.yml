@@ -1,0 +1,620 @@
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALAnyState:any_state.yml
+---
+metadata:
+  title: |-
+    Rhode Island Authorization for Release of Educational Records and Appointment of Guardian
+  short title: |-
+    RI Educational Guardian
+  description: |-
+    This form allows you to designate a caregiver to access your child's educational records and make decisions on their behalf. It's essential for ensuring your child's educational needs are met if you are unable to care for them.
+  can_I_use_this_form: |
+    You can use this form if you need to appoint someone to handle educational matters for your child. This is especially useful if you might be unavailable due to detention or other reasons.
+  before_you_start: |
+    ### Before you get started
+    - Gather your child's information, including their names and dates of birth.
+    - Identify a trusted caregiver who will act on your behalf.
+
+    ### When you are finished
+    - Ensure all signatures are completed in front of a notary public.
+    - Keep a copy of the signed document for your records.
+  when_you_are_finished: |
+    After completing the form, make sure to keep a signed copy for yourself and provide a copy to the appointed caregiver. This will help ensure they can act on your behalf when needed.
+  efiling_enabled: False
+  integrated_efiling: False
+  integrated_email_filing: False
+  requires_notarization: False
+  unlisted: False
+  landing_page_url: >-
+    https://courtformsonline.org/
+  maturity: production
+  estimated_completion_minutes: ""
+  estimated_completion_delta: ""
+  LIST_topics:
+    - ED-12-00-00-00
+  tags:
+    - "CO-00-00-00-00"
+  authors:
+    - Court Forms Online
+  original_form: []
+  original_form_published_on: ""
+  help_page_url: >-
+    https://www.centerforjustice.org/fpp/overview
+  help_page_title: >-
+
+  allowed_courts: []
+  typical_role: na
+  al_weaver_version: "2.3.1"
+  generated_on: "2026-09-21"
+  languages:
+    - en
+  jurisdiction: "NAM-US-US+RI"
+  review_date: 2026-09-21
+  form_titles:
+    - Test rhode island educational form interview-with-fields
+  form_numbers: []
+  update_notes: ""
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = "RI"
+---
+code: |
+  github_repo_name = 'docassemble-TestRhodeIslandEducationalFormInterviewwithfields'
+---
+template: interview_short_title
+content: |
+  Authorize educational record release now
+---
+code: |
+  al_form_type = "other_form"
+---
+id: alweaver assemblyline settings
+initial: True
+code: |
+  # Managed by the graphical AssemblyLine settings editor.
+  allowed_courts = []
+  AL_ORGANIZATION_TITLE = ''
+  AL_ORGANIZATION_HOMEPAGE = ''
+  AL_DEFAULT_LANGUAGE = 'en'
+  AL_DEFAULT_OVERFLOW_MESSAGE = '...'
+  user_ask_role = 'unknown'
+  al_person_answering = 'user'
+  al_form_requires_digital_signature = False
+  al_typed_signature_prefix = '/s/'
+  al_typed_signature_font = ''
+  speak_text = True
+  enable_al_language = True
+  al_user_default_language = 'en'
+  al_interview_languages = ['en']
+  github_user = ''
+  al_next_steps_enabled = True
+  al_next_steps_document_title = 'Authorization'
+  al_next_steps_document_purpose = 'release'
+  al_next_steps_help_organization = 'Rhode Island Center for Justice'
+  al_next_steps_help_url = 'https://www.rijustice.org'
+  al_next_steps_generate_qr_code = False
+  al_next_steps_what_happens_next = 'After completing the form, make sure to keep a signed copy for yourself and provide a copy to the appointed caregiver. This will help ensure they can act on your behalf when needed.'
+  al_next_steps_what_can_decision_maker_do = "The appointed caregiver can discuss educational matters, receive records, and make decisions regarding your child's education. They will act in your absence to ensure your child’s needs are met."
+  al_next_steps_what_happens_if_i_win = "If the caregiver successfully takes on this role, they will be able to manage your child's educational needs. This can provide stability and support for your child during uncertain times."
+  # AL_DEFAULT_COUNTRY is set in one of your own code blocks, not here.
+  # AL_DEFAULT_STATE is set in one of your own code blocks, not here.
+  # al_form_type is set in one of your own code blocks, not here.
+  # github_repo_name is set in one of your own code blocks, not here.
+---
+id: block-9-dbfc8008
+objects:
+  - caregivers: "ALPeopleList.using(ask_number=True, target_number=1)"
+  - children: ALPeopleList.using(ask_number=True)
+  - notary: "ALPeopleList.using(ask_number=True, target_number=1)"
+  - users: ALPeopleList.using(ask_number=True)
+---
+sections:
+  - people: Names & Contacts
+  - about_you: Addresses & Roles
+  - case_details: Case Details & Dates
+  - sign_and_submit: Sign & Submit
+  - review_test_rhode_island_educational_form_interviewwithfields: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_test_rhode_island_educational_form_interviewwithfields
+mandatory: True
+code: |
+  al_intro_screen
+  test_rhode_island_educational_form_interviewwithfields_intro
+  user_ask_role
+  nav.set_section('people')
+  users.gather()
+  set_parts(subtitle=str(users))
+  nav.set_section('case_details')
+  users[0].address.address
+  set_progress(22)
+  children.gather()
+  children[0].birthdate
+  if children.number() > 1:
+    children[1].birthdate
+  set_progress(45)
+  if children.number() > 2:
+    children[2].birthdate
+  if children.number() > 3:
+    children[3].birthdate
+  caregivers.gather()
+  set_progress(68)
+  caregivers[0].address.address
+  nav.set_section('sign_and_submit')
+  signature_date
+  signature_date
+  store_variables_snapshot( persistent=True, data={ "zip": showifdef("users[0].address.zip"), "reached_interview_end": True, }, )
+  test_rhode_island_educational_form_interviewwithfields_preview_question
+  basic_questions_signature_flow
+  notary.gather()
+  notarized_county
+  set_progress(100)
+  test_rhode_island_educational_form_interviewwithfields_download
+---
+id: Test rhode island educational form interview with fields intro
+continue button field: test_rhode_island_educational_form_interviewwithfields_intro
+question: Authorization for Appointment of Educational Guardian
+subquestion: |
+  This form lets a parent or guardian name a trusted adult (i.e., a caregiver) who can get your child's school records and make school decisions if you are ever unavailable.
+  
+  ### You can use this form if
+  
+  - You are the parent or legal guardian of a child in school, and
+  - The child lives in Rhode Island.
+  
+  ### You will need
+  
+  - The full name and address of the caregiver you are choosing
+  - Each child's full name and date of birth
+  
+  It is estimated to take less than 10 minutes. The form is legally effective once signed. We strongly recommend having it notarized if you can. You will be asked about notarization near the end.
+---
+id: how many parents
+question: How many parents or guardians will sign this form?
+subquestion: The form has room for one or two parents/guardians.
+fields:
+  - Number of parents/guardians: users.target_number
+    datatype: radio
+    choices:
+      - 1
+      - 2
+---
+id: caregiver address
+sets:
+  - "caregivers[i].address.address"
+  - "caregivers[i].address.city"
+  - "caregivers[i].address.zip"
+  - "caregivers[i].address.unit"
+  - "caregivers[i].address.state"
+  - "caregivers[i].address.country"
+question: "What is the caregiver's address?"
+fields:
+  - code: |
+      caregivers[i].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE, required={'zip': True})
+---
+id: user address
+sets:
+  - "users[i].address.address"
+  - "users[i].address.city"
+  - "users[i].address.zip"
+  - "users[i].address.unit"
+  - "users[i].address.state"
+  - "users[i].address.country"
+question: |
+  % if i == 0 and al_person_answering == "user":
+  What is your address?
+  % else:
+  What is ${ users[i] }'s address?
+  % endif
+fields:
+  - label: "Where does ${ users[i] } live?"
+    field: users[i].address
+    datatype: object_radio
+    choices:
+      - users[0].address if defined("users[0].address.address") else None
+    object labeler: "lambda y: y.on_one_line()"
+    none of the above: Somewhere else
+    disable others: True
+    show if:
+      code: |
+        i > 0 and defined("users[0].address.address")
+  - code: |
+      users[i].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE, required={'zip': True})
+---
+id: Notary Information
+question: |
+  Notary Information
+subquestion: |
+  Please provide details about the notarization.
+fields:
+  - "County where notarization occurred": notarized_county
+  - "Month of notarization": notarized_month
+  - "Year of notarization": notarized_year
+  - "Day of notarization": notarized_day
+  - "Expiration date of notary commission": notary_commission_expires_date
+    datatype: date
+---
+comment: |
+  The questions below are copies of the questions in AssemblyLine's
+  ql_baseline.yml, rewritten to name this interview's own objects instead of the
+  generic `x`. Edit them freely: they replace the AssemblyLine versions. Delete
+  one to go back to the AssemblyLine wording.
+---
+id: caregivers names
+question: Who will be the caregiver?
+subquestion: |
+  The caregiver is the adult you are giving permission to make school decisions for your child while you are unavailable. They will be able to get your child's school records, talk to school staff about your child, and make decisions about which school, classroom, or program your child is in and what services they receive (for example, a classroom aide, a formal plan for any disability, etc.).
+  
+  Enter their full name.
+fields:
+  - code: |
+      caregivers[i].name_fields()
+sets:
+  - "caregivers[i].name.first"
+  - "caregivers[i].name.last"
+  - "caregivers[i].name.middle"
+  - "caregivers[i].name.suffix"
+---
+id: how many children
+question: How many children are you listing on this form?
+subquestion: You can list up to 4 children on this form.
+fields:
+  - Number of children: children.target_number
+    datatype: radio
+    choices:
+      - 1
+      - 2
+      - 3
+      - 4
+---
+id: children names
+sets:
+  - children[i].name.first
+  - children[i].name.last
+  - children[i].name.middle
+  - children[i].name.suffix
+question: |
+  % if hasattr(children, 'ask_number') and children.ask_number and children.target_number == 1:
+  What is your child's name?
+  % else:
+  What is the name of child ${ i + 1 } of ${ children.target_number }?
+  % endif
+fields:
+  - code: |
+      children[i].name_fields()
+---
+id: another child
+question: |
+  Is there another child to tell us about?
+fields:
+  - no label: children.there_is_another
+    datatype: yesnoradio
+---
+id: notary names
+sets:
+  - notary[i].name.first
+  - notary[i].name.last
+  - notary[i].name.middle
+  - notary[i].name.suffix
+question: |
+  % if hasattr(notary, 'ask_number') and notary.ask_number and notary.target_number == 1:
+  Name of notary
+  % else:
+  Name of the ${ ordinal(i) } notary
+  % endif
+fields:
+  - code: |
+      notary[i].name_fields()
+---
+id: users names
+sets:
+  - users[i].name.first
+  - users[i].name.last
+  - users[i].name.middle
+  - users[i].name.suffix
+question: |
+  % if i == 0 and al_person_answering == "user":
+  What is your name?
+  % else:
+  What is the other parent or guardian's name?
+  % endif
+fields:
+  - code: |
+      users[i].name_fields()
+---
+id: another user
+question: |
+  % if al_form_type in ['starts_case', 'existing_case', 'appeal']:
+  Is anyone else on your side of this case?
+  % else:
+  Is anyone else adding their name to this form with you?
+  % endif
+subquestion: |
+  % if len(users.elements) > 1:
+  So far you have told us about ${ comma_and_list(users.complete_elements()) }.
+  % endif
+fields:
+  - no label: users.there_is_another
+    datatype: yesnoradio
+---
+id: preview test_rhode_island_educational_form_interviewwithfields
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.
+
+  ${ al_recipient_bundle.as_pdf(key='preview') }
+
+  Open the form preview in a new tab. Use the "Edit answers" button to edit your
+  answers.
+
+  ${ action_button_html(url_action('review_test_rhode_island_educational_form_interviewwithfields'), label=word('Edit answers'), color='info') }
+
+  Return to this interview tab to continue and sign your form.
+continue button field: test_rhode_island_educational_form_interviewwithfields_preview_question
+---
+id: block-26-dfa831e7
+code: |
+  signature_fields = ["users[0].signature"]
+  if users.target_number == 2:
+      signature_fields.append("users[1].signature")
+  signature_fields.append("notary[0].signature")
+---
+id: code_1790022294039
+code: |
+  interview_short_title = "Rhode Island Educational Guardian Form"
+---
+id: test rhode island educational form interviewwithfields review screen
+event: review_test_rhode_island_educational_form_interviewwithfields
+question: |
+  Review your answers
+review:
+  - Edit: users.revisit
+    button: |
+      **Users**
+
+      % for item in users:
+        * ${ item }
+      % endfor
+  - Edit: notarized_county
+    button: |
+      **Notary Information**
+
+      County where notarization occurred: ${ showifdef('notarized_county') }
+
+      Month of notarization: ${ showifdef('notarized_month') }
+
+      Year of notarization: ${ showifdef('notarized_year') }
+
+      Day of notarization: ${ showifdef('notarized_day') }
+
+      Expiration date of notary commission: ${ showifdef('notary_commission_expires_date') }
+  - Edit: children.revisit
+    button: |
+      **Children**
+
+      % for item in children:
+        * ${ item }
+      % endfor
+  - Edit: caregivers.revisit
+    button: |
+      **Caregivers**
+
+      % for item in caregivers:
+        * ${ item }
+      % endfor
+  - Edit: notary.revisit
+    button: |
+      **Notary**
+
+      % for item in notary:
+        * ${ item }
+      % endfor
+  - Edit: notarized_county
+    button: |
+      **County where notarization occurred**
+
+      County where notarization occurred: ${ showifdef('notarized_county') }
+  - Edit: notarized_month
+    button: |
+      **Month of notarization**
+
+      Month of notarization: ${ showifdef('notarized_month') }
+  - Edit: notarized_year
+    button: |
+      **Year of notarization**
+
+      Year of notarization: ${ showifdef('notarized_year') }
+  - Edit: notarized_day
+    button: |
+      **Day of notarization**
+
+      Day of notarization: ${ showifdef('notarized_day') }
+  - Edit: notary_commission_expires_date
+    button: |
+      **Expiration date of notary commission**
+
+      Expiration date of notary commission: ${ showifdef('notary_commission_expires_date') }
+---
+id: edit users
+continue button field: users.revisit
+question: |
+  Edit users
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Name: |
+      row_item.name_full() if defined("row_item.name.first") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+  - Signature: |
+      row_item.signature if defined("row_item.signature") else ""
+edit:
+  - name.first
+  - address.address
+confirm: True
+---
+id: edit children
+continue button field: children.revisit
+question: |
+  Edit children
+subquestion: |
+  ${ children.table }
+
+  ${ children.add_action() }
+---
+table: children.table
+rows: children
+columns:
+  - Name: |
+      row_item.name_full() if defined("row_item.name.first") else ""
+  - Birthdate: |
+      row_item.birthdate if defined("row_item.birthdate") else ""
+edit:
+  - name.first
+  - birthdate
+confirm: True
+---
+id: edit caregivers
+continue button field: caregivers.revisit
+question: |
+  Edit caregivers
+subquestion: |
+  ${ caregivers.table }
+
+  ${ caregivers.add_action() }
+---
+table: caregivers.table
+rows: caregivers
+columns:
+  - Name: |
+      row_item.name_full() if defined("row_item.name.first") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+edit:
+  - name.first
+  - address.address
+confirm: True
+---
+id: edit notary
+continue button field: notary.revisit
+question: |
+  Edit notary
+subquestion: |
+  ${ notary.table }
+
+  ${ notary.add_action() }
+---
+table: notary.table
+rows: notary
+columns:
+  - Signature: |
+      row_item.signature if defined("row_item.signature") else ""
+  - Name: |
+      row_item.name_full() if defined("row_item.name.first") else ""
+edit:
+  - name.first
+confirm: True
+---
+id: download test_rhode_island_educational_form_interviewwithfields
+event: test_rhode_island_educational_form_interviewwithfields_download
+question: |
+  All done
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+
+  Use the options on this page to view, download and send your form. Use the
+  "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_test_rhode_island_educational_form_interviewwithfields'), label=word('Edit answers'), color='info') }
+
+  ${ al_user_bundle.download_list_html() }
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+progress: 100
+---
+# ALDocument objects specify the metadata for each template
+objects:
+  - test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions: ALDocument.using(filename="test_rhode_island_educational_form_interviewwithfields_next_steps.docx", enabled=al_next_steps_enabled, has_addendum=False)
+  - test_rhode_island_educational_form_interviewwithfields_attachment: ALDocument.using(filename="test_rhode_island_educational_form_interviewwithfields", enabled=True, has_addendum=False)
+---
+# Bundles group the ALDocuments into separate downloads, such as for court and for the user
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions, test_rhode_island_educational_form_interviewwithfields_attachment], filename="test_rhode_island_educational_form_interviewwithfields", enabled=True)
+  - al_recipient_bundle: ALDocumentBundle.using(elements=[test_rhode_island_educational_form_interviewwithfields_attachment], filename="test_rhode_island_educational_form_interviewwithfields", enabled=True)
+---
+template: test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions.title
+content: |
+  Instructions
+---
+template: test_rhode_island_educational_form_interviewwithfields_attachment.title
+content: |
+  Test rhode island educational form interview-with-fields
+---
+template: al_user_bundle.title
+content: |
+  All forms to download for your records
+---
+template: al_recipient_bundle.title
+content: |
+  All forms to file
+---
+# Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the
+# same template is used for "preview" and "final" keys, and logic in the template checks
+# the value of `i` to show or hide the user's signature
+attachment:
+  name: Post-interview-Instructions
+  filename: test_rhode_island_educational_form_interviewwithfields_next_steps
+  docx template file: test_rhode_island_educational_form_interviewwithfields_next_steps.docx
+  variable name: test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions[i]
+  skip undefined: True
+  tagged pdf: True
+---
+attachment:
+  name: test rhode island educational form interviewwithfields
+  filename: test_rhode_island_educational_form_interviewwithfields
+  variable name: test_rhode_island_educational_form_interviewwithfields_attachment[i]
+  skip undefined: True
+  pdf template file: test_rhode_island_educational_form_interview-with-fields.pdf
+  fields:
+      - "users1_name_full": "${ users }"
+      - "users1_name_full__1": ${ users[0] }
+      - "users1_name_full__2": "${ users }"
+      - "users1_address_on_one_line": ${ users[0].address.on_one_line() }
+      - "children1_name_full": ${ children[0] }
+      - "children1_birthdate": ${ children[0].birthdate.format() }
+      - "children2_name_full": ${ children[1] }
+      - "children2_birthdate": ${ children[1].birthdate.format() }
+      - "children3_name_full": ${ children[2] }
+      - "children3_birthdate": ${ children[2].birthdate.format() }
+      - "children4_name_full": ${ children[3] }
+      - "children4_birthdate": ${ children[3].birthdate.format() }
+      - "caregivers_name_full": ${ caregivers[0] }
+      - "caregivers_address_on_one_line": ${ caregivers[0].address.on_one_line() }
+      - "users1_signature": ${ users[0].signature_if_final(i) }
+      - "signature_date": ${ signature_date.format() }
+      - "signature_date__1": ${ signature_date.format() }
+      - "users2_signature": ${ users[1].signature_if_final(i) }
+      - "users2_name_full": ${ users[1] }
+      - "notarized_county": ${ notarized_county }
+      - "notarized_month": ${ notarized_month }
+      - "notarized_year": ${ notarized_year }
+      - "notarized_day": ${ notarized_day }
+      - "notary_signature": ${ notary[0].signature_if_final(i) }
+      - "notary_name_full": ${ notary[0] }
+      - "notary_commission_expires_date": ${ notary_commission_expires_date.format() }

@@ -1,2 +1,3 @@
-# docassemble-RIEducationalGuardianForm
-A docassemble project for P2026RhodeIslandEducationalGuardianForm.
+# docassemble.RIEducationalGuardianForm
+
+A docassemble extension.
