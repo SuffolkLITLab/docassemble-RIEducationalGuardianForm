@@ -18,7 +18,7 @@ metadata:
     - Identify a trusted caregiver who will act on your behalf.
 
     ### When you are finished
-    - Ensure all signatures are completed in front of a notary public.
+    - We strongly recommend signing in front of a notary public.
     - Keep a copy of the signed document for your records.
   when_you_are_finished: |
     After completing the form, make sure to keep a signed copy for yourself and provide a copy to the appointed caregiver. This will help ensure they can act on your behalf when needed.
@@ -80,8 +80,8 @@ initial: True
 code: |
   # Managed by the graphical AssemblyLine settings editor.
   allowed_courts = []
-  AL_ORGANIZATION_TITLE = ''
-  AL_ORGANIZATION_HOMEPAGE = ''
+  AL_ORGANIZATION_TITLE = 'Suffolk LIT Lab'
+  AL_ORGANIZATION_HOMEPAGE = 'https://suffolklitlab.org'
   AL_DEFAULT_LANGUAGE = 'en'
   AL_DEFAULT_OVERFLOW_MESSAGE = '...'
   user_ask_role = 'unknown'
@@ -94,7 +94,7 @@ code: |
   al_user_default_language = 'en'
   al_interview_languages = ['en']
   github_user = ''
-  al_next_steps_enabled = True
+  al_next_steps_enabled = False
   al_next_steps_document_title = 'Authorization'
   al_next_steps_document_purpose = 'release'
   al_next_steps_help_organization = 'Rhode Island Center for Justice'
@@ -146,6 +146,8 @@ code: |
     children[2].birthdate
   if children.number() > 3:
     children[3].birthdate
+  if notarized_letter_required:
+    notarized_letter_notice
   caregivers.gather()
   set_progress(68)
   caregivers[0].address.address
@@ -154,9 +156,14 @@ code: |
   signature_date
   store_variables_snapshot( persistent=True, data={ "zip": showifdef("users[0].address.zip"), "reached_interview_end": True, }, )
   test_rhode_island_educational_form_interviewwithfields_preview_question
+  notarize_now
   basic_questions_signature_flow
-  notary.gather()
-  notarized_county
+  if notarize_now:
+    notary_handoff
+    notary.gather()
+    notarized_county
+    notarized_month
+    notary[0].signature
   set_progress(100)
   test_rhode_island_educational_form_interviewwithfields_download
 ---
@@ -164,25 +171,81 @@ id: Test rhode island educational form interview with fields intro
 continue button field: test_rhode_island_educational_form_interviewwithfields_intro
 question: Authorization for Appointment of Educational Guardian
 subquestion: |
-  This form lets a parent or guardian name a trusted adult (i.e., a caregiver) who can get your child's school records and make school decisions if you are ever unavailable.
-  
-  ### You can use this form if
-  
-  - You are the parent or legal guardian of a child in school, and
-  - The child lives in Rhode Island.
-  
-  ### You will need
-  
-  - The full name and address of the caregiver you are choosing
-  - Each child's full name and date of birth
-  
-  It is estimated to take less than 10 minutes. The form is legally effective once signed. We strongly recommend having it notarized if you can. You will be asked about notarization near the end.
+  Use this form to let a trusted adult (a {caregiver}):
+
+  - Get your child's school records
+  - Make school-related decisions if you are unavailable
+
+  This does not make the caregiver your child's {legal guardian}.
+
+  ## You can use this form if
+
+  - You are the parent or legal guardian of a child in school
+  - Your child lives in Rhode Island
+
+  ## Before you start
+
+  Have this information ready:
+
+  - Caregiver's full name and address
+  - Each child's full name
+  - Each child's date of birth
+  - Each child's school district
+
+  Time: about 10 minutes
+
+  ## Signing this form
+
+  You will choose how to sign at the end.
+
+  A {notary} is not required for most school districts, but we recommend having the form notarized. A notarized form may be easier for a school to accept and can help confirm that the signature is yours.
+
+  Need a notary? You may be able to find one for free at:
+
+  - Your public library
+  - Your bank
+  - United Way's 2-1-1 helpline
+---
+terms:
+  green words: |
+    Tap any green word to see what it means.
+  notary: |
+    A notary (notary public) is a person licensed by the state to witness signatures. Many banks and public libraries have one, often for free.
+  caregiver: |
+    The trusted adult you are choosing to make school decisions for your child when you are not available.
+  legal guardian: |
+    A person a court has given the legal right to make decisions for a child. Only a court can make someone a legal guardian. This form does not do that.
+---
+id: welcome screen
+question: |
+  ${ interview_short_title }
+subquestion: |
+  This tool helps you fill out Rhode Island's Educational Guardian form in 3 steps:
+
+  Step 1. Answer questions that will fill in your form for you.<br>
+  Step 2. Preview the completed form.<br>
+  Step 3. Download and print the final form. You will need to deliver it on your own.
+
+  This site is not a lawyer. If you would like a lawyer, find [your local legal aid provider](https://www.lsc.gov/what-legal-aid/find-legal-aid).
+
+  Tap the {green words} in any screen for a definition or more information.
+fields:
+  - note: |
+      ${ display_template(al_terms_of_use, scrollable=True) }
+      To continue, you must accept our terms of use
+  - I accept the terms of use: acknowledged_information_use
+    datatype: yesnowide
+    grid: 8
+validation code: |
+  if not acknowledged_information_use:
+    validation_error("You must accept the terms of use to continue.")
+continue button field: al_intro_screen
 ---
 id: how many parents
-question: How many parents or guardians will sign this form?
-subquestion: The form has room for one or two parents/guardians.
+question: How many parents or legal guardians will sign this form?
+subquestion: The form has room for one or two parents/legal guardians.
 fields:
-  - Number of parents/guardians: users.target_number
+  - no label: users.target_number
     datatype: radio
     choices:
       - 1
@@ -230,18 +293,57 @@ fields:
   - code: |
       users[i].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE, required={'zip': True})
 ---
+id: notarize now
+question: |
+  Is a notary with you right now?
+subquestion: |
+  % if notarized_letter_required:
+  Because ${ children[0].name.first } goes to school in ${ children[0].school_district }, you need a notary. If a notary is not with you right now, choose **No** and then "print and sign later" on the next screen.
+  % else:
+  A notary is not required, but we recommend having one.
+  % endif
+
+  - Choose **Yes** if a notary is with you now. You will sign on this screen, then hand the device to the notary to complete their part.
+  - Choose **No** if a notary is not with you now. You can sign on this screen now, or print the form and sign it later in front of a notary.
+
+  **Important:** if you sign on this screen now without a notary present, the form cannot be notarized later.
+fields:
+  - no label: notarize_now
+    datatype: yesnoradio
+---
+id: notary handoff
+continue button field: notary_handoff
+question: |
+  Please hand this device to the notary
+subquestion: |
+  The next screens are for the notary. They will enter their name, the county, today's date, and their commission expiration date, and then sign.
+
+  ${ users } signed this form on ${ signature_date.format() }.
+---
 id: Notary Information
 question: |
-  Notary Information
+  Notary: enter your information
 subquestion: |
-  Please provide details about the notarization.
+  This will be printed in the notary certificate on the form. ${ users } appeared before you.
 fields:
-  - "County where notarization occurred": notarized_county
-  - "Month of notarization": notarized_month
-  - "Year of notarization": notarized_year
-  - "Day of notarization": notarized_day
-  - "Expiration date of notary commission": notary_commission_expires_date
+  - "County where this notarization is taking place": notarized_county
+  - "Date of notarization": notarized_date
     datatype: date
+  - "Your commission expiration date": notary_commission_expires_date
+    datatype: date
+---
+code: |
+  # The form prints "On this ___ day of ___, 20__", so one date is split three ways.
+  notarized_month = notarized_date.format("MMMM")
+  notarized_day = notarized_date.format("d")
+  notarized_year = notarized_date.format("yy")
+---
+id: notary signature
+question: |
+  Notary: sign your name
+signature: notary[0].signature
+under: |
+  ${ notary[0] }, Notary Public
 ---
 comment: |
   The questions below are copies of the questions in AssemblyLine's
@@ -249,12 +351,46 @@ comment: |
   generic `x`. Edit them freely: they replace the AssemblyLine versions. Delete
   one to go back to the AssemblyLine wording.
 ---
+#################### School district logic #####################
+comment: |
+  Districts that require a notarized permission letter from the parent before
+  a non-parent can register a child. Verified so far:
+    Providence - https://www.providenceschools.org/registration/registration/registration-requirements
+  Every other district falls back to the general notary recommendation on the
+  intro screen. Add a district to this list once its rules are confirmed.
+code: |
+  districts_requiring_notarized_letter = ["Providence"]
+---
+code: |
+  notarized_letter_required = any(
+    child.school_district in districts_requiring_notarized_letter
+    for child in children
+  )
+---
+id: notarized letter notice
+continue button field: notarized_letter_notice
+question: |
+  ${ children[0].name.first }'s school is in ${ children[0].school_district }
+subquestion: |
+  Providence schools have a rule. If someone other than a parent or legal guardian signs a child up for school, they **must** show a letter from the parent or legal guardian. The letter **must** be signed in front of a notary.
+
+  This form gives the caregiver permission to make school decisions for ${ children[0].name.first }. To be safe, **sign it in front of a notary**.
+
+  At the end, choose "print and sign later." Then take the printed form to a notary and sign it there. **If a notary is with you right now, you can sign on the screen instead.**
+---
 id: caregivers names
 question: Who will be the caregiver?
 subquestion: |
-  The caregiver is the adult you are giving permission to make school decisions for your child while you are unavailable. They will be able to get your child's school records, talk to school staff about your child, and make decisions about which school, classroom, or program your child is in and what services they receive (for example, a classroom aide, a formal plan for any disability, etc.).
-  
-  Enter their full name.
+  The caregiver is the adult you are giving permission to make school decisions for your child while you are unavailable.
+
+  The caregiver will be able to:
+
+  - Get your child's school records, including special education, counseling, and medical records
+  - Talk to school staff about your child
+  - Make decisions about your child's school, classroom, or program
+  - Make decisions about services your child gets at school, including special education
+
+  This stays in effect until you cancel it in writing or your child turns 18.
 fields:
   - code: |
       caregivers[i].name_fields()
@@ -290,7 +426,49 @@ question: |
   % endif
 fields:
   - code: |
-      children[i].name_fields()
+           children[i].name_fields()
+  - "What school district is this child's school in?": children[i].school_district
+    datatype: dropdown
+    choices:
+      - Barrington
+      - Bristol Warren
+      - Burrillville
+      - Central Falls
+      - Chariho
+      - Coventry
+      - Cranston
+      - Cumberland
+      - East Greenwich
+      - East Providence
+      - Exeter-West Greenwich
+      - Foster
+      - Foster-Glocester
+      - Glocester
+      - Jamestown
+      - Johnston
+      - Lincoln
+      - Little Compton
+      - Middletown
+      - Narragansett
+      - New Shoreham
+      - Newport
+      - North Kingstown
+      - North Providence
+      - North Smithfield
+      - Pawtucket
+      - Portsmouth
+      - Providence
+      - Scituate
+      - Smithfield
+      - South Kingstown
+      - Tiverton
+      - Warwick
+      - West Warwick
+      - Westerly
+      - Woonsocket
+      - Other or charter school
+    help: |
+      Not sure? Check a letter from the school, or ask the school office.
 ---
 id: another child
 question: |
@@ -367,7 +545,7 @@ code: |
   signature_fields = ["users[0].signature"]
   if users.target_number == 2:
       signature_fields.append("users[1].signature")
-  signature_fields.append("notary[0].signature")
+ 
 ---
 id: code_1790022294039
 code: |
@@ -380,24 +558,11 @@ question: |
 review:
   - Edit: users.revisit
     button: |
-      **Users**
+      **Parents or guardians**
 
       % for item in users:
         * ${ item }
       % endfor
-  - Edit: notarized_county
-    button: |
-      **Notary Information**
-
-      County where notarization occurred: ${ showifdef('notarized_county') }
-
-      Month of notarization: ${ showifdef('notarized_month') }
-
-      Year of notarization: ${ showifdef('notarized_year') }
-
-      Day of notarization: ${ showifdef('notarized_day') }
-
-      Expiration date of notary commission: ${ showifdef('notary_commission_expires_date') }
   - Edit: children.revisit
     button: |
       **Children**
@@ -407,43 +572,22 @@ review:
       % endfor
   - Edit: caregivers.revisit
     button: |
-      **Caregivers**
+      **Caregiver**
 
       % for item in caregivers:
         * ${ item }
       % endfor
-  - Edit: notary.revisit
+  - Edit: notarized_county
     button: |
       **Notary**
 
-      % for item in notary:
-        * ${ item }
-      % endfor
-  - Edit: notarized_county
-    button: |
-      **County where notarization occurred**
+      County: ${ notarized_county }
 
-      County where notarization occurred: ${ showifdef('notarized_county') }
-  - Edit: notarized_month
-    button: |
-      **Month of notarization**
+      Date of notarization: ${ notarized_date }
 
-      Month of notarization: ${ showifdef('notarized_month') }
-  - Edit: notarized_year
-    button: |
-      **Year of notarization**
+      Notary: ${ notary[0] }
 
-      Year of notarization: ${ showifdef('notarized_year') }
-  - Edit: notarized_day
-    button: |
-      **Day of notarization**
-
-      Day of notarization: ${ showifdef('notarized_day') }
-  - Edit: notary_commission_expires_date
-    button: |
-      **Expiration date of notary commission**
-
-      Expiration date of notary commission: ${ showifdef('notary_commission_expires_date') }
+      Commission expires: ${ notary_commission_expires_date }
 ---
 id: edit users
 continue button field: users.revisit
@@ -537,6 +681,14 @@ question: |
 subquestion: |
   Thank you ${users}. Your form is ready to download and deliver.
 
+  % if notarize_now:
+  The notary's information and signature are on the form. Print it and keep a copy for yourself. Give a copy to ${ caregivers[0] }.
+  % else:
+  If you signed on screen, your form is complete. Keep a copy for yourself and give a copy to ${ caregivers[0] }.
+
+  If you chose to print and sign later, we strongly recommend signing in front of a notary. Many notaries are free: try your public library, your bank, or dial 2-1-1 to contact United Way of Rhode Island for assistance.
+  % endif
+
   Use the options on this page to view, download and send your form. Use the
   "Edit answers" button to fix any mistakes.
 
@@ -564,7 +716,7 @@ content: |
 ---
 template: test_rhode_island_educational_form_interviewwithfields_attachment.title
 content: |
-  Test rhode island educational form interview-with-fields
+  Authorization for Release of Educational Records and Appointment of Guardian
 ---
 template: al_user_bundle.title
 content: |
