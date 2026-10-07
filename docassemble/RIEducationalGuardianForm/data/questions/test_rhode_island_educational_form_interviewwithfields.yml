@@ -228,7 +228,7 @@ subquestion: |
 
   This site is not a lawyer. If you would like a lawyer, find [your local legal aid provider](https://www.lsc.gov/what-legal-aid/find-legal-aid).
 
-  Tap the {green words} in any screen for a definition or more information.
+  Tap any underlined word, like {caregiver}, for its meaning.
 fields:
   - note: |
       ${ display_template(al_terms_of_use, scrollable=True) }
@@ -243,7 +243,7 @@ continue button field: al_intro_screen
 ---
 id: how many parents
 question: How many parents or legal guardians will sign this form?
-subquestion: The form has room for one or two parents/legal guardians.
+subquestion: The form has room for one or two parents or legal guardians.
 fields:
   - no label: users.target_number
     datatype: radio
@@ -298,12 +298,12 @@ question: |
   Is a notary with you right now?
 subquestion: |
   % if notarized_letter_required:
-  Because ${ children[0].name.first } goes to school in ${ children[0].school_district }, you need a notary. If a notary is not with you right now, choose **No** and then "print and sign later" on the next screen.
+  Because ${ notarized_letter_children[0].name.first } goes to school in ${ notarized_letter_children[0].school_district }, you need a notary. If a notary is not with you now, choose **No** and on the next screen, choose "print and sign later."
   % else:
   A notary is not required, but we recommend having one.
   % endif
 
-  - Choose **Yes** if a notary is with you now. You will sign on this screen, then hand the device to the notary to complete their part.
+  - Choose **Yes** if a notary is with you now. You will sign on this screen, then hand the device to the notary to fill in their part.
   - Choose **No** if a notary is not with you now. You can sign on this screen now, or print the form and sign it later in front of a notary.
 
   **Important:** if you sign on this screen now without a notary present, the form cannot be notarized later.
@@ -314,9 +314,9 @@ fields:
 id: notary handoff
 continue button field: notary_handoff
 question: |
-  Please hand this device to the notary
+  Hand this device to the notary.
 subquestion: |
-  The next screens are for the notary. They will enter their name, the county, today's date, and their commission expiration date, and then sign.
+  The next screens are for the notary. They will enter their name, the county, today's date, and their commission end date, and then sign.
 
   ${ users } signed this form on ${ signature_date.format() }.
 ---
@@ -362,21 +362,23 @@ code: |
   districts_requiring_notarized_letter = ["Providence"]
 ---
 code: |
-  notarized_letter_required = any(
-    child.school_district in districts_requiring_notarized_letter
-    for child in children
-  )
+  notarized_letter_children = [child for child in children if child.school_district in districts_requiring_notarized_letter]
+  notarized_letter_required = len(notarized_letter_children) > 0
 ---
 id: notarized letter notice
 continue button field: notarized_letter_notice
 question: |
-  ${ children[0].name.first }'s school is in ${ children[0].school_district }
+  ${ notarized_letter_children[0].name.first }'s school is in ${ notarized_letter_children[0].school_district }
 subquestion: |
-  Providence schools have a rule. If someone other than a parent or legal guardian signs a child up for school, they **must** show a letter from the parent or legal guardian. The letter **must** be signed in front of a notary.
+  Providence has a special rule. If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they must show a letter from you. The letter must be signed in front of a notary.
 
-  This form gives the caregiver permission to make school decisions for ${ children[0].name.first }. To be safe, **sign it in front of a notary**.
+  This form gives your caregiver permission to make school decisions for ${ notarized_letter_children[0].name.first }. To be safe, **sign it in front of a notary.** Here is how:
 
-  At the end, choose "print and sign later." Then take the printed form to a notary and sign it there. **If a notary is with you right now, you can sign on the screen instead.**
+  - At the end, choose **"print and sign later."**
+  - Take the printed form to a notary.
+  - Sign it there.
+
+  If a notary is with you right now, you can sign on the screen instead.
 ---
 id: caregivers names
 question: Who will be the caregiver?
@@ -430,43 +432,43 @@ fields:
   - "What school district is this child's school in?": children[i].school_district
     datatype: dropdown
     choices:
-      - Barrington
-      - Bristol Warren
-      - Burrillville
-      - Central Falls
-      - Chariho
-      - Coventry
-      - Cranston
-      - Cumberland
-      - East Greenwich
-      - East Providence
-      - Exeter-West Greenwich
-      - Foster
-      - Foster-Glocester
-      - Glocester
-      - Jamestown
-      - Johnston
-      - Lincoln
-      - Little Compton
-      - Middletown
-      - Narragansett
-      - New Shoreham
-      - Newport
-      - North Kingstown
-      - North Providence
-      - North Smithfield
-      - Pawtucket
-      - Portsmouth
-      - Providence
-      - Scituate
-      - Smithfield
-      - South Kingstown
-      - Tiverton
-      - Warwick
-      - West Warwick
-      - Westerly
-      - Woonsocket
-      - Other or charter school
+      - Barrington: Barrington
+      - Bristol Warren: Bristol Warren
+      - Burrillville: Burrillville
+      - Central Falls: Central Falls
+      - Chariho: Chariho
+      - Coventry: Coventry
+      - Cranston: Cranston
+      - Cumberland: Cumberland
+      - East Greenwich: East Greenwich
+      - East Providence: East Providence
+      - Exeter-West Greenwich: Exeter-West Greenwich
+      - Foster: Foster
+      - Foster-Glocester: Foster-Glocester
+      - Glocester: Glocester
+      - Jamestown: Jamestown
+      - Johnston: Johnston
+      - Lincoln: Lincoln
+      - Little Compton: Little Compton
+      - Middletown: Middletown
+      - Narragansett: Narragansett
+      - New Shoreham: New Shoreham
+      - Newport: Newport
+      - North Kingstown: North Kingstown
+      - North Providence: North Providence
+      - North Smithfield: North Smithfield
+      - Pawtucket: Pawtucket
+      - Portsmouth: Portsmouth
+      - Providence: Providence
+      - Scituate: Scituate
+      - Smithfield: Smithfield
+      - South Kingstown: South Kingstown
+      - Tiverton: Tiverton
+      - Warwick: Warwick
+      - West Warwick: West Warwick
+      - Westerly: Westerly
+      - Woonsocket: Woonsocket
+      - Other or charter school: Other or charter school
     help: |
       Not sure? Check a letter from the school, or ask the school office.
 ---
@@ -543,9 +545,8 @@ continue button field: test_rhode_island_educational_form_interviewwithfields_pr
 id: block-26-dfa831e7
 code: |
   signature_fields = ["users[0].signature"]
-  if users.target_number == 2:
+  if len(users.elements) > 1:
       signature_fields.append("users[1].signature")
- 
 ---
 id: code_1790022294039
 code: |
@@ -631,6 +632,7 @@ columns:
 edit:
   - name.first
   - birthdate
+  - school_district
 confirm: True
 ---
 id: edit caregivers
@@ -684,9 +686,9 @@ subquestion: |
   % if notarize_now:
   The notary's information and signature are on the form. Print it and keep a copy for yourself. Give a copy to ${ caregivers[0] }.
   % else:
-  If you signed on screen, your form is complete. Keep a copy for yourself and give a copy to ${ caregivers[0] }.
+  If you signed on screen, your form is finished. Keep a copy for yourself and give a copy to ${ caregivers[0] }.
 
-  If you chose to print and sign later, we strongly recommend signing in front of a notary. Many notaries are free: try your public library, your bank, or dial 2-1-1 to contact United Way of Rhode Island for assistance.
+  If you chose to print and sign later, we strongly recommend signing in front of a notary. Many notaries are free. Try your public library or your bank. You can also dial 2-1-1 to reach United Way of Rhode Island.
   % endif
 
   Use the options on this page to view, download and send your form. Use the
