@@ -94,7 +94,7 @@ code: |
   al_user_default_language = 'en'
   al_interview_languages = ['en']
   github_user = ''
-  al_next_steps_enabled = False
+  al_next_steps_enabled = True
   al_next_steps_document_title = 'Authorization'
   al_next_steps_document_purpose = 'release'
   al_next_steps_help_organization = 'Rhode Island Center for Justice'
@@ -137,6 +137,8 @@ code: |
   nav.set_section('case_details')
   users[0].address.address
   set_progress(22)
+  caregivers.gather()
+  caregivers[0].address.address
   children.gather()
   children[0].birthdate
   if children.number() > 1:
@@ -148,17 +150,18 @@ code: |
     children[3].birthdate
   if notarized_letter_required:
     notarized_letter_notice
-  caregivers.gather()
   set_progress(68)
-  caregivers[0].address.address
   nav.set_section('sign_and_submit')
   signature_date
   signature_date
   store_variables_snapshot( persistent=True, data={ "zip": showifdef("users[0].address.zip"), "reached_interview_end": True, }, )
   test_rhode_island_educational_form_interviewwithfields_preview_question
-  notarize_now
+  notary_option
+  if notary_option == "option3":
+    signature_choice = "sign_after_printing"
+    saw_signature_choice = True
   basic_questions_signature_flow
-  if notarize_now:
+  if notary_option == "option2":
     notary_handoff
     notary.gather()
     notarized_county
@@ -169,19 +172,20 @@ code: |
 ---
 id: Test rhode island educational form interview with fields intro
 continue button field: test_rhode_island_educational_form_interviewwithfields_intro
-question: Authorization for Appointment of Educational Guardian
+question: <span class="text-primary">Please read the following important information before you fill out this form.</span> 
 subquestion: |
-  Use this form to let a trusted adult (a {caregiver}):
-
-  - Get your child's school records
-  - Make school-related decisions if you are unavailable
-
-  This does not make the caregiver your child's {legal guardian}.
-
   ## You can use this form if
 
-  - You are the parent or legal guardian of a child in school
-  - Your child lives in Rhode Island
+  - Your child goes to school in Rhode Island
+  - You are the parent or legal guardian of a child in a school in Rhode Island
+
+  ## What this form does
+
+    This form lets a trusted adult (a {caregiver}) get your child's school records and make school decisions for your child if you are unavailable.
+
+  A parent might become unavailable because of an illness, an arrest, or something else unexpected. This form helps make sure your child has an educational plan if that happens.
+
+  This does not make the caregiver your child's {legal guardian}.
 
   ## Before you start
 
@@ -192,13 +196,11 @@ subquestion: |
   - Each child's date of birth
   - Each child's school district
 
-  Time: about 10 minutes
-
   ## Signing this form
 
-  You will choose how to sign at the end.
-
-  A {notary} is not required for most school districts, but we recommend having the form notarized. A notarized form may be easier for a school to accept and can help confirm that the signature is yours.
+  A {notary} is not required for most school districts, but we recommend having the form notarized. 
+  
+  A notarized form may be easier for a school to accept and can help confirm that the signature is yours.
 
   Need a notary? You may be able to find one for free at:
 
@@ -222,17 +224,18 @@ question: |
 subquestion: |
   This tool helps you fill out Rhode Island's Educational Guardian form in 3 steps:
 
-  Step 1. Answer questions that will fill in your form for you.<br>
-  Step 2. Preview the completed form.<br>
-  Step 3. Download and print the final form. You will need to deliver it on your own.
+  Step 1. Write or select your answers to the following questions.<br>
+  Step 2. Preview before printing.<br>
+  Step 3. Download and print the final form. 
 
   This site is not a lawyer. If you would like a lawyer, find [your local legal aid provider](https://www.lsc.gov/what-legal-aid/find-legal-aid).
 
-  Tap any underlined word, like {caregiver}, for its meaning.
+    <span class="fs-5">**Click any underlined word, like {caregiver}, for its meaning.**</span>
 fields:
   - note: |
       ${ display_template(al_terms_of_use, scrollable=True) }
-      To continue, you must accept our terms of use
+      
+      <div class="fs-5 fw-bold">To continue, you must accept our terms of use.</div>
   - I accept the terms of use: acknowledged_information_use
     datatype: yesnowide
     grid: 8
@@ -295,21 +298,49 @@ fields:
 ---
 id: notarize now
 question: |
+  % if notarized_letter_required:
   Is a notary with you right now?
+  % else:
+  Do you want to use a notary to sign this form?
+  % endif
 subquestion: |
   % if notarized_letter_required:
-  Because ${ notarized_letter_children[0].name.first } goes to school in ${ notarized_letter_children[0].school_district }, you need a notary. If a notary is not with you now, choose **No** and on the next screen, choose "print and sign later."
-  % else:
-  A notary is not required, but we recommend having one.
-  % endif
+  ${ notarized_letter_children[0].name.first } goes to school in ${ notarized_letter_children[0].school_district }. This means you MUST sign this form in front of a notary. If a notary is not with you now, choose **No**.
 
   - Choose **Yes** if a notary is with you now. You will sign on this screen, then hand the device to the notary to fill in their part.
-  - Choose **No** if a notary is not with you now. You can sign on this screen now, or print the form and sign it later in front of a notary.
+  - Choose **No** if a notary is not with you now. You can print the form and sign it later in front of a notary.
+  % else:
+  **You do not need a notary to sign this form.** Only Providence schools ask for a notarized letter.
 
-  **Important:** if you sign on this screen now without a notary present, the form cannot be notarized later.
+  <span class="text-primary">**But we strongly recommend using a notary, because:**</span>
+
+  - <span class="text-primary">**It proves who you are.** A notary checks your ID to make sure you are the person signing.</span>
+  - <span class="text-primary">**It makes your signature more trustworthy.** It helps schools, courts, and other organizations trust that the right person signed.</span>
+
+  <span class="fs-5">**You have three options:**</span>
+
+  - **Option 1:** Sign without a notary.
+  - **Option 2:** A notary is with you right now. You sign on the screen, then hand the device to the notary so they can sign.
+  - **Option 3:** You want a notary, but one is not with you right now. Download and print the form, then sign it in front of a notary.
+  % endif
 fields:
-  - no label: notarize_now
-    datatype: yesnoradio
+  - no label: notary_option
+    datatype: radio
+    choices:
+      - "Yes": option2
+      - "No": option3
+    show if:
+      code: |
+        notarized_letter_required
+  - no label: notary_option
+    datatype: radio
+    choices:
+      - "Option 1": option1
+      - "Option 2": option2
+      - "Option 3": option3
+    show if:
+      code: |
+        not notarized_letter_required
 ---
 id: notary handoff
 continue button field: notary_handoff
@@ -370,15 +401,13 @@ continue button field: notarized_letter_notice
 question: |
   ${ notarized_letter_children[0].name.first }'s school is in ${ notarized_letter_children[0].school_district }
 subquestion: |
-  Providence has a special rule. If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they must show a letter from you. The letter must be signed in front of a notary.
+  Providence has a special rule.
 
-  This form gives your caregiver permission to make school decisions for ${ notarized_letter_children[0].name.first }. To be safe, **sign it in front of a notary.** Here is how:
+  If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they **must** show a letter from you that was signed in front of a notary. **To be safe, sign this form in front of a notary.**
 
-  - At the end, choose **"print and sign later."**
-  - Take the printed form to a notary.
-  - Sign it there.
+  **If a notary is NOT with you right now:** do NOT sign on the screen. Instead, print out the form and sign it later in front of a notary.
 
-  If a notary is with you right now, you can sign on the screen instead.
+  **If a notary is with you right now:** you and the notary can both sign on the screen.
 ---
 id: caregivers names
 question: Who will be the caregiver?
@@ -530,16 +559,17 @@ id: preview test_rhode_island_educational_form_interviewwithfields
 question: |
   Preview your form before you sign it
 subquestion: |
-  Here is a preview of the form you will sign on the next page.
+  Here is a preview of the form.
+
+  **Click the image of the form to preview it. It will open in a new tab.**
 
   ${ al_recipient_bundle.as_pdf(key='preview') }
 
-  Open the form preview in a new tab. Use the "Edit answers" button to edit your
-  answers.
+  **Use the "Edit answers" button below to edit your answers if you have any changes you would like to make.**
 
   ${ action_button_html(url_action('review_test_rhode_island_educational_form_interviewwithfields'), label=word('Edit answers'), color='info') }
 
-  Return to this interview tab to continue and sign your form.
+    <span class="fs-5">If everything looks good, click **Next**.</span>
 continue button field: test_rhode_island_educational_form_interviewwithfields_preview_question
 ---
 id: block-26-dfa831e7
@@ -679,20 +709,15 @@ confirm: True
 id: download test_rhode_island_educational_form_interviewwithfields
 event: test_rhode_island_educational_form_interviewwithfields_download
 question: |
-  All done
+  Your form is ready
 subquestion: |
-  Thank you ${users}. Your form is ready to download and deliver.
+  Here is what you should do now: 
+  
+  1. View or download the **Next Steps Document** to see what to do next.
 
-  % if notarize_now:
-  The notary's information and signature are on the form. Print it and keep a copy for yourself. Give a copy to ${ caregivers[0] }.
-  % else:
-  If you signed on screen, your form is finished. Keep a copy for yourself and give a copy to ${ caregivers[0] }.
+  2. View or download the **Rhode Island Educational Guardian Form** to see your form.
 
-  If you chose to print and sign later, we strongly recommend signing in front of a notary. Many notaries are free. Try your public library or your bank. You can also dial 2-1-1 to reach United Way of Rhode Island.
-  % endif
-
-  Use the options on this page to view, download and send your form. Use the
-  "Edit answers" button to fix any mistakes.
+  If you need to change anything, click **Edit answers**.
 
   ${ action_button_html(url_action('review_test_rhode_island_educational_form_interviewwithfields'), label=word('Edit answers'), color='info') }
 
@@ -714,11 +739,11 @@ objects:
 ---
 template: test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions.title
 content: |
-  Instructions
+  Next Steps Document
 ---
 template: test_rhode_island_educational_form_interviewwithfields_attachment.title
 content: |
-  Authorization for Release of Educational Records and Appointment of Guardian
+  Rhode Island Educational Guardian Form
 ---
 template: al_user_bundle.title
 content: |
@@ -734,7 +759,7 @@ content: |
 attachment:
   name: Post-interview-Instructions
   filename: test_rhode_island_educational_form_interviewwithfields_next_steps
-  docx template file: test_rhode_island_educational_form_interviewwithfields_next_steps.docx
+  docx template file: next_steps_document.docx
   variable name: test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions[i]
   skip undefined: True
   tagged pdf: True
@@ -772,3 +797,64 @@ attachment:
       - "notary_signature": ${ notary[0].signature_if_final(i) }
       - "notary_name_full": ${ notary[0] }
       - "notary_commission_expires_date": ${ notary_commission_expires_date.format() }
+---
+id: signature choice without typed
+decoration: file-signature
+question: |
+  Your documents are almost ready
+subquestion: |
+  How do you want to sign them?
+fields: 
+  - "I will sign <span class='visually-hidden'>desktop</span>": signature_choice
+    input type: radio
+    choices:
+      - On a phone with my finger: phone
+        help: |
+          % if is_sms_enabled():
+          We can text or share a link with your phone on the next screen
+          % else:
+          We can share a link with your phone on the next screen
+          % endif
+      - On this device: this_device
+    show if:
+      code: |
+        al_form_requires_digital_signature and not (
+          device() and (device().is_mobile or device().is_touch_capable)
+        )
+  - "I will sign <span class='visually-hidden'>mobile</span>": signature_choice
+    input type: radio
+    choices:
+      - On this device: this_device
+    show if:
+      code: |
+        al_form_requires_digital_signature and (
+          device() and (device().is_mobile or device().is_touch_capable)
+        )
+  - "I will sign <span class='visually-hidden'>desktop with print</span>": signature_choice
+    input type: radio
+    choices:
+      - On a phone with my finger: phone
+        help: |
+          % if is_sms_enabled():
+          We can text or share a link with your phone on the next screen
+          % else:
+          We can share a link with your phone on the next screen
+          % endif
+      - On this device: this_device
+      - On the paper with a pen after I print the documents: sign_after_printing
+    show if:
+      code: |
+        not al_form_requires_digital_signature and not (
+          device() and (device().is_mobile or device().is_touch_capable)
+        )
+  - "I will sign <span class='visually-hidden'>mobile with print</span>": signature_choice
+    input type: radio
+    choices:
+      - On this device: this_device
+      - On the paper with a pen after I print the documents: sign_after_printing
+    show if:
+      code: |
+        not al_form_requires_digital_signature and (
+          device() and (device().is_mobile or device().is_touch_capable)
+        )
+continue button field: saw_signature_choice
