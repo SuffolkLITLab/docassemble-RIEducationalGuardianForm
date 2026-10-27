@@ -116,11 +116,10 @@ objects:
   - users: ALPeopleList.using(ask_number=True)
 ---
 sections:
-  - people: Names & Contacts
-  - about_you: Addresses & Roles
-  - case_details: Case Details & Dates
-  - sign_and_submit: Sign & Submit
+  - people: Parents or guardians
+  - case_details: Caregiver & children
   - review_test_rhode_island_educational_form_interviewwithfields: Review your answers
+  - sign_and_submit: Sign & download
 ---
 #################### Interview order #####################
 comment: |
@@ -130,13 +129,14 @@ mandatory: True
 code: |
   al_intro_screen
   test_rhode_island_educational_form_interviewwithfields_intro
+  what_you_need_screen
   user_ask_role
   nav.set_section('people')
   users.gather()
   set_parts(subtitle=str(users))
-  nav.set_section('case_details')
   users[0].address.address
   set_progress(22)
+  nav.set_section('case_details')
   caregivers.gather()
   caregivers[0].address.address
   children.gather()
@@ -148,25 +148,26 @@ code: |
     children[2].birthdate
   if children.number() > 3:
     children[3].birthdate
+  if adult_child_present:
+    adult_child_notice
   if notarized_letter_required:
     notarized_letter_notice
   set_progress(68)
-  nav.set_section('sign_and_submit')
+  nav.set_section('review_test_rhode_island_educational_form_interviewwithfields')
   signature_date
   signature_date
   store_variables_snapshot( persistent=True, data={ "zip": showifdef("users[0].address.zip"), "reached_interview_end": True, }, )
   test_rhode_island_educational_form_interviewwithfields_preview_question
-  notary_option
-  if notary_option == "option3":
+  nav.set_section('sign_and_submit')
+  if notarized_letter_required:
     signature_choice = "sign_after_printing"
     saw_signature_choice = True
+  else:
+    notary_option
+    if notary_option == "print_for_notary":
+      signature_choice = "sign_after_printing"
+      saw_signature_choice = True
   basic_questions_signature_flow
-  if notary_option == "option2":
-    notary_handoff
-    notary.gather()
-    notarized_county
-    notarized_month
-    notary[0].signature
   set_progress(100)
   test_rhode_island_educational_form_interviewwithfields_download
 ---
@@ -186,7 +187,11 @@ subquestion: |
   A parent might become unavailable because of an illness, an arrest, or something else unexpected. This form helps make sure your child has an educational plan if that happens.
 
   This does not make the caregiver your child's {legal guardian}.
-
+---
+id: what you need
+continue button field: what_you_need_screen
+question: <span class="text-primary">Please read the following important information before you fill out this form.</span>
+subquestion: |
   ## Before you start
 
   Have this information ready:
@@ -298,18 +303,8 @@ fields:
 ---
 id: notarize now
 question: |
-  % if notarized_letter_required:
-  Is a notary with you right now?
-  % else:
-  Do you want to use a notary to sign this form?
-  % endif
+  Signing your form
 subquestion: |
-  % if notarized_letter_required:
-  ${ notarized_letter_children[0].name.first } goes to school in ${ notarized_letter_children[0].school_district }. This means you MUST sign this form in front of a notary. If a notary is not with you now, choose **No**.
-
-  - Choose **Yes** if a notary is with you now. You will sign on this screen, then hand the device to the notary to fill in their part.
-  - Choose **No** if a notary is not with you now. You can print the form and sign it later in front of a notary.
-  % else:
   **You do not need a notary to sign this form.** Only Providence schools ask for a notarized letter.
 
   <span class="text-primary">**But we strongly recommend using a notary, because:**</span>
@@ -317,64 +312,13 @@ subquestion: |
   - <span class="text-primary">**It proves who you are.** A notary checks your ID to make sure you are the person signing.</span>
   - <span class="text-primary">**It makes your signature more trustworthy.** It helps schools, courts, and other organizations trust that the right person signed.</span>
 
-  <span class="fs-5">**You have three options:**</span>
-
-  - **Option 1:** Sign without a notary.
-  - **Option 2:** A notary is with you right now. You sign on the screen, then hand the device to the notary so they can sign.
-  - **Option 3:** You want a notary, but one is not with you right now. Download and print the form, then sign it in front of a notary.
-  % endif
+  A notary cannot sign on this screen. If you want a notary, you will print the form and sign it in front of them.
 fields:
-  - no label: notary_option
+  - "Do you want to use a notary to sign this form?": notary_option
     datatype: radio
     choices:
-      - "Yes": option2
-      - "No": option3
-    show if:
-      code: |
-        notarized_letter_required
-  - no label: notary_option
-    datatype: radio
-    choices:
-      - "Option 1": option1
-      - "Option 2": option2
-      - "Option 3": option3
-    show if:
-      code: |
-        not notarized_letter_required
----
-id: notary handoff
-continue button field: notary_handoff
-question: |
-  Hand this device to the notary.
-subquestion: |
-  The next screens are for the notary. They will enter their name, the county, today's date, and their commission end date, and then sign.
-
-  ${ users } signed this form on ${ signature_date.format() }.
----
-id: Notary Information
-question: |
-  Notary: enter your information
-subquestion: |
-  This will be printed in the notary certificate on the form. ${ users } appeared before you.
-fields:
-  - "County where this notarization is taking place": notarized_county
-  - "Date of notarization": notarized_date
-    datatype: date
-  - "Your commission expiration date": notary_commission_expires_date
-    datatype: date
----
-code: |
-  # The form prints "On this ___ day of ___, 20__", so one date is split three ways.
-  notarized_month = notarized_date.format("MMMM")
-  notarized_day = notarized_date.format("d")
-  notarized_year = notarized_date.format("yy")
----
-id: notary signature
-question: |
-  Notary: sign your name
-signature: notary[0].signature
-under: |
-  ${ notary[0] }, Notary Public
+      - "Sign without a notary": no_notary
+      - "Print the form and sign it in front of a notary": print_for_notary
 ---
 comment: |
   The questions below are copies of the questions in AssemblyLine's
@@ -396,6 +340,10 @@ code: |
   notarized_letter_children = [child for child in children if child.school_district in districts_requiring_notarized_letter]
   notarized_letter_required = len(notarized_letter_children) > 0
 ---
+code: |
+  adult_children = [child for child in children if child.age_in_years() >= 18]
+  adult_child_present = len(adult_children) > 0
+---
 id: notarized letter notice
 continue button field: notarized_letter_notice
 question: |
@@ -404,10 +352,14 @@ subquestion: |
   Providence has a special rule.
 
   If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they **must** show a letter from you that was signed in front of a notary. **To be safe, sign this form in front of a notary.**
+---
+id: adult child notice
+continue button field: adult_child_notice
+question: |
+  ${ adult_children[0].name.first } is 18 or older
+subquestion: |
+  <div class="alert alert-danger">This form is written for children under 18. It may not work for ${ adult_children[0].name.first }.</div>
 
-  **If a notary is NOT with you right now:** do NOT sign on the screen. Instead, print out the form and sign it later in front of a notary.
-
-  **If a notary is with you right now:** you and the notary can both sign on the screen.
 ---
 id: caregivers names
 question: Who will be the caregiver?
@@ -450,10 +402,10 @@ sets:
   - children[i].name.middle
   - children[i].name.suffix
 question: |
-  % if hasattr(children, 'ask_number') and children.ask_number and children.target_number == 1:
+  % if hasattr(children, 'ask_number') and children.ask_number and int(children.target_number) == 1:
   What is your child's name?
   % else:
-  What is the name of child ${ i + 1 } of ${ children.target_number }?
+  What is the name of the ${ ordinal(i) } child?
   % endif
 fields:
   - code: |
@@ -720,6 +672,14 @@ subquestion: |
   If you need to change anything, click **Edit answers**.
 
   ${ action_button_html(url_action('review_test_rhode_island_educational_form_interviewwithfields'), label=word('Edit answers'), color='info') }
+
+  **Important:** The form says "DO NOT SIGN UNTIL YOU ARE STANDING IN FRONT OF A NOTARY." This only applies to you if:
+
+  **1.** Your child's school is in the Providence school district
+
+  **OR**
+
+  **2.** You want to sign in front of a notary
 
   ${ al_user_bundle.download_list_html() }
 
