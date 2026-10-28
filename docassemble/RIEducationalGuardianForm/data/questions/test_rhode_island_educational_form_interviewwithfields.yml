@@ -29,8 +29,8 @@ metadata:
   unlisted: False
   landing_page_url: >-
     https://courtformsonline.org/
-  maturity: production
-  estimated_completion_minutes: ""
+  maturity: beta
+  estimated_completion_minutes: 15
   estimated_completion_delta: ""
   LIST_topics:
     - ED-12-00-00-00
@@ -38,12 +38,13 @@ metadata:
     - "CO-00-00-00-00"
   authors:
     - Court Forms Online
-  original_form: []
+  original_form: 
+    - https://www.centerforjustice.org/fpp/overview
   original_form_published_on: ""
   help_page_url: >-
     https://www.centerforjustice.org/fpp/overview
   help_page_title: >-
-
+    Rhode Island Center for Justice 
   allowed_courts: []
   typical_role: na
   al_weaver_version: "2.3.1"
@@ -53,7 +54,7 @@ metadata:
   jurisdiction: "NAM-US-US+RI"
   review_date: 2026-09-21
   form_titles:
-    - Test rhode island educational form interview-with-fields
+    - Rhode Island Authorization for Release of Educational Records and Appointment of Guardian for Educational Purposes
   form_numbers: []
   update_notes: ""
 ---
@@ -70,7 +71,7 @@ code: |
 ---
 template: interview_short_title
 content: |
-  Authorize educational record release now
+  Rhode Island Educational Guardian Form 
 ---
 code: |
   al_form_type = "other_form"
@@ -112,7 +113,6 @@ id: block-9-dbfc8008
 objects:
   - caregivers: "ALPeopleList.using(ask_number=True, target_number=1)"
   - children: ALPeopleList.using(ask_number=True)
-  - notary: "ALPeopleList.using(ask_number=True, target_number=1)"
   - users: ALPeopleList.using(ask_number=True)
 ---
 sections:
@@ -130,6 +130,9 @@ code: |
   al_intro_screen
   test_rhode_island_educational_form_interviewwithfields_intro
   what_you_need_screen
+  child_in_ri_school
+  if not (child_in_ri_school and is_parent_or_guardian):
+    not_eligible_exit
   user_ask_role
   nav.set_section('people')
   users.gather()
@@ -140,21 +143,15 @@ code: |
   caregivers.gather()
   caregivers[0].address.address
   children.gather()
-  children[0].birthdate
-  if children.number() > 1:
-    children[1].birthdate
+  for child in children:
+    child.birthdate
+    if child.age_in_years() >= 18:
+      child.adult_notice_seen
   set_progress(45)
-  if children.number() > 2:
-    children[2].birthdate
-  if children.number() > 3:
-    children[3].birthdate
-  if adult_child_present:
-    adult_child_notice
   if notarized_letter_required:
     notarized_letter_notice
   set_progress(68)
   nav.set_section('review_test_rhode_island_educational_form_interviewwithfields')
-  signature_date
   signature_date
   store_variables_snapshot( persistent=True, data={ "zip": showifdef("users[0].address.zip"), "reached_interview_end": True, }, )
   test_rhode_island_educational_form_interviewwithfields_preview_question
@@ -182,7 +179,7 @@ subquestion: |
 
   ## What this form does
 
-    This form lets a trusted adult (a {caregiver}) get your child's school records and make school decisions for your child if you are unavailable.
+    This form lets a trusted adult (a {caregiver}) get your child's school records. The caregiver can also make school decisions for your child if you are unavailable.
 
   A parent might become unavailable because of an illness, an arrest, or something else unexpected. This form helps make sure your child has an educational plan if that happens.
 
@@ -212,6 +209,28 @@ subquestion: |
   - Your public library
   - Your bank
   - United Way's 2-1-1 helpline
+---
+id: eligibility check
+question: |
+  Please confirm that the following information is true to continue:
+subquestion: |
+  Click to confirm. 
+fields:
+  - "I confirm that my child or children go to school in Rhode Island": child_in_ri_school
+    datatype: yesnowide
+  - "I confirm that I am the parent or legal guardian of a child in a school in Rhode Island": is_parent_or_guardian
+    datatype: yesnowide
+---
+id: not eligible
+event: not_eligible_exit
+question: |
+  This form is not for you
+subquestion: |
+  This form only works for a child who goes to school in Rhode Island. You must be the child's parent or legal guardian. 
+
+  If you left a box unchecked a box by mistake, click **Undo** to go back.
+buttons:
+  - Exit: exit
 ---
 terms:
   green words: |
@@ -307,10 +326,13 @@ question: |
 subquestion: |
   **You do not need a notary to sign this form.** Only Providence schools ask for a notarized letter.
 
-  <span class="text-primary">**But we strongly recommend using a notary, because:**</span>
-
-  - <span class="text-primary">**It proves who you are.** A notary checks your ID to make sure you are the person signing.</span>
-  - <span class="text-primary">**It makes your signature more trustworthy.** It helps schools, courts, and other organizations trust that the right person signed.</span>
+  <div class="alert alert-warning">
+  <strong>We strongly recommend using a notary, because:</strong>
+  <ul class="mb-0">
+  <li><strong>It proves who you are.</strong> A notary checks your ID to make sure you are the person signing.</li>
+  <li><strong>It makes your signature more trustworthy.</strong> It helps schools, courts, and other organizations trust that the right person signed.</li>
+  </ul>
+  </div>
 
   A notary cannot sign on this screen. If you want a notary, you will print the form and sign it in front of them.
 fields:
@@ -351,14 +373,14 @@ question: |
 subquestion: |
   Providence has a special rule.
 
-  If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they **must** show a letter from you that was signed in front of a notary. **To be safe, sign this form in front of a notary.**
+  If your caregiver signs ${ notarized_letter_children[0].name.first } up for school, they **must** show a letter from you. The letter must be signed in front of a notary. **To be safe, sign this form in front of a notary.**
 ---
 id: adult child notice
-continue button field: adult_child_notice
+continue button field: children[i].adult_notice_seen
 question: |
-  ${ adult_children[0].name.first } is 18 or older
+  ${ children[i].name.first } is 18 or older
 subquestion: |
-  <div class="alert alert-danger">This form is written for children under 18. It may not work for ${ adult_children[0].name.first }.</div>
+  <div class="alert alert-danger">This form is written for children under 18. It may not work for ${ children[i].name.first }.</div>
 
 ---
 id: caregivers names
@@ -460,22 +482,6 @@ fields:
   - no label: children.there_is_another
     datatype: yesnoradio
 ---
-id: notary names
-sets:
-  - notary[i].name.first
-  - notary[i].name.last
-  - notary[i].name.middle
-  - notary[i].name.suffix
-question: |
-  % if hasattr(notary, 'ask_number') and notary.ask_number and notary.target_number == 1:
-  Name of notary
-  % else:
-  Name of the ${ ordinal(i) } notary
-  % endif
-fields:
-  - code: |
-      notary[i].name_fields()
----
 id: users names
 sets:
   - users[i].name.first
@@ -530,10 +536,6 @@ code: |
   if len(users.elements) > 1:
       signature_fields.append("users[1].signature")
 ---
-id: code_1790022294039
-code: |
-  interview_short_title = "Rhode Island Educational Guardian Form"
----
 id: test rhode island educational form interviewwithfields review screen
 event: review_test_rhode_island_educational_form_interviewwithfields
 question: |
@@ -560,17 +562,6 @@ review:
       % for item in caregivers:
         * ${ item }
       % endfor
-  - Edit: notarized_county
-    button: |
-      **Notary**
-
-      County: ${ notarized_county }
-
-      Date of notarization: ${ notarized_date }
-
-      Notary: ${ notary[0] }
-
-      Commission expires: ${ notary_commission_expires_date }
 ---
 id: edit users
 continue button field: users.revisit
@@ -638,26 +629,6 @@ edit:
   - address.address
 confirm: True
 ---
-id: edit notary
-continue button field: notary.revisit
-question: |
-  Edit notary
-subquestion: |
-  ${ notary.table }
-
-  ${ notary.add_action() }
----
-table: notary.table
-rows: notary
-columns:
-  - Signature: |
-      row_item.signature if defined("row_item.signature") else ""
-  - Name: |
-      row_item.name_full() if defined("row_item.name.first") else ""
-edit:
-  - name.first
-confirm: True
----
 id: download test_rhode_island_educational_form_interviewwithfields
 event: test_rhode_island_educational_form_interviewwithfields_download
 question: |
@@ -711,7 +682,7 @@ content: |
 ---
 template: al_recipient_bundle.title
 content: |
-  All forms to file
+  Form to give the school 
 ---
 # Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the
 # same template is used for "preview" and "final" keys, and logic in the template checks
@@ -719,7 +690,7 @@ content: |
 attachment:
   name: Post-interview-Instructions
   filename: test_rhode_island_educational_form_interviewwithfields_next_steps
-  docx template file: next_steps_document.docx
+  docx template file: next_steps_v2.docx
   variable name: test_rhode_island_educational_form_interviewwithfields_Post_interview_instructions[i]
   skip undefined: True
   tagged pdf: True
