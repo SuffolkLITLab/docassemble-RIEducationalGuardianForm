@@ -71,7 +71,7 @@ code: |
 ---
 template: interview_short_title
 content: |
-  Rhode Island Educational Guardian Form 
+    Give someone permission to make educational decisions for your child 
 ---
 code: |
   al_form_type = "other_form"
